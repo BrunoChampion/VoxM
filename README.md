@@ -289,5 +289,3 @@ The repository `.gitignore` excludes these by default.
 - VoxM sanitizes provider errors so raw Groq responses and API keys are not shown in user-visible errors.
 
 See [SECURITY.md](./SECURITY.md) for vulnerability reporting guidance.
- 
- 

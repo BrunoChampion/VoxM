@@ -1,0 +1,23 @@
+node_modules/
+apps/*/node_modules/
+
+dist/
+apps/*/dist/
+coverage/
+
+.env
+.env.*
+!.env.example
+
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Local VoxM outputs and private meeting artifacts.
+voxm-recording_*
+voxm-transcript_*
+*.webm
+*.mp4
+*.wav
+*.mp3

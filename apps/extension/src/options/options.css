@@ -1,50 +1,119 @@
 body {
-  max-width: 640px;
+  max-width: 660px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
+  padding: var(--space-6) var(--space-5) var(--space-7);
 }
 
 .page-header {
-  margin-bottom: var(--spacing-lg);
-  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border);
 }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.brand-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+}
+
+.page-subtitle {
+  max-width: 60ch;
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+/* Sections */
 
 .section {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow-sm);
 }
 
 .section h2 {
-  font-size: 16px;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 680;
+  letter-spacing: 0.005em;
 }
+
+/* Checkbox rows */
 
 .checkbox-field {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
 }
 
 .checkbox-field input {
   width: auto;
+  margin-top: 2px;
 }
 
 .checkbox-field label {
   margin-bottom: 0;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
 }
 
 .actions {
   display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
 
+/* Danger zone */
+
 .danger-zone {
-  border-color: #fecaca;
-  background: #fef2f2;
+  border-color: rgba(180, 35, 24, 0.28);
+  background: var(--color-danger-bg);
+}
+
+.danger-zone h2 {
+  border-bottom-color: rgba(180, 35, 24, 0.2);
+  color: var(--color-danger-text);
+}
+
+@media (max-width: 560px) {
+  body {
+    padding: var(--space-5) var(--space-4) var(--space-6);
+  }
+
+  .section {
+    padding: var(--space-4);
+  }
+
+  .actions button {
+    flex: 1 1 auto;
+  }
 }

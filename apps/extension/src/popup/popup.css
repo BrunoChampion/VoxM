@@ -1,84 +1,124 @@
 body {
   width: 360px;
   min-height: 200px;
+  background: var(--color-bg);
 }
 
 #app {
-  padding: var(--spacing-lg);
+  padding: var(--space-4);
 }
 
 .popup-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--space-4);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.brand-mark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .popup-header h1 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .version {
-  font-size: 12px;
-  color: var(--color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-faint);
 }
+
+/* Recording indicator */
 
 .recording-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--color-danger-bg);
   color: var(--color-danger);
-  font-weight: 600;
-  margin-bottom: var(--spacing-md);
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .recording-dot {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--color-danger);
-  animation: pulse 1.2s infinite;
+  animation: pulse 1.4s var(--ease-out) infinite;
 }
 
 @keyframes pulse {
   0%,
   100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.4;
+    opacity: 0.45;
+    transform: scale(0.82);
   }
 }
+
+/* Status tiles */
 
 .status-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .status-item {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: var(--spacing-sm);
+  padding: 10px var(--space-3);
+  box-shadow: var(--shadow-sm);
 }
 
 .status-item label {
+  display: block;
+  margin-bottom: 3px;
   font-size: 11px;
+  font-weight: 560;
+  letter-spacing: 0.01em;
   color: var(--color-text-muted);
-  margin-bottom: 2px;
 }
 
 .status-item .value {
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
+
+/* Actions */
 
 .actions {
   display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
+  gap: var(--space-2);
+  margin-top: var(--space-3);
 }
 
 .actions button {
@@ -90,7 +130,9 @@ body {
 }
 
 .disclaimer {
-  font-size: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
   color: var(--color-text-muted);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--space-3);
+  text-wrap: pretty;
 }

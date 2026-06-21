@@ -1,4 +1,5 @@
 import type { TranscriptJson } from '../transcription/transcriptionTypes';
+import type { MeetingSummaryJson } from '../summary/summaryTypes';
 import type { RecordingStatus } from '../recording/recordingTypes';
 import { getDB } from './db';
 
@@ -20,12 +21,23 @@ export type RecordingEntity = {
   videoFilename?: string;
   videoMimeType?: string;
   videoSizeBytes?: number;
+  videoBlob?: Blob;
 
   transcriptMarkdown?: string;
   transcriptJson?: TranscriptJson;
 
   transcriptMarkdownDownloadId?: number;
   transcriptJsonDownloadId?: number;
+
+  summaryMarkdown?: string;
+  summaryJson?: MeetingSummaryJson;
+  summaryMarkdownDownloadId?: number;
+  summaryJsonDownloadId?: number;
+  summaryModelProvider?: 'groq';
+  summaryModelName?: 'llama-3.3-70b-versatile';
+  summaryGeneratedAt?: string;
+  summaryErrorCode?: string;
+  summaryErrorMessage?: string;
 
   modelProvider: 'groq';
   modelName: 'whisper-large-v3-turbo';

@@ -17,6 +17,7 @@ export type TranscriptJson = {
   durationMs: number;
   source: 'browser-tab';
   model: 'whisper-large-v3-turbo';
+  language?: string;
   diarization: false;
   segments: TranscriptSegment[];
   failedChunks: FailedChunk[];

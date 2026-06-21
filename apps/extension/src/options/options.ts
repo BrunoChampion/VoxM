@@ -57,13 +57,10 @@ function render(settings: Settings, saved = false, error?: string, success?: str
         <label for="auto-download-video">Auto-download video after stop</label>
       </div>
       <div class="checkbox-field">
-        <input type="checkbox" id="auto-download-markdown" ${settings.autoDownloadMarkdown ? 'checked' : ''} />
-        <label for="auto-download-markdown">Auto-download transcript Markdown</label>
+        <input type="checkbox" id="auto-generate-summary" ${settings.autoGenerateSummary ? 'checked' : ''} />
+        <label for="auto-generate-summary">Generate meeting summary after transcription</label>
       </div>
-      <div class="checkbox-field">
-        <input type="checkbox" id="auto-download-json" ${settings.autoDownloadJson ? 'checked' : ''} />
-        <label for="auto-download-json">Auto-download transcript JSON</label>
-      </div>
+      <p class="help-text" style="margin-bottom: 12px;">Transcripts, summaries, and debug JSON stay in Recordings until you choose to download them.</p>
       <div class="checkbox-field">
         <input type="checkbox" id="show-consent" ${settings.showConsentReminder ? 'checked' : ''} />
         <label for="show-consent">Show consent reminder before recording</label>
@@ -106,10 +103,7 @@ function render(settings: Settings, saved = false, error?: string, success?: str
   document.getElementById('auto-download-video')?.addEventListener('change', () => {
     void savePreferences();
   });
-  document.getElementById('auto-download-markdown')?.addEventListener('change', () => {
-    void savePreferences();
-  });
-  document.getElementById('auto-download-json')?.addEventListener('change', () => {
+  document.getElementById('auto-generate-summary')?.addEventListener('change', () => {
     void savePreferences();
   });
   document.getElementById('show-consent')?.addEventListener('change', () => {
@@ -204,10 +198,7 @@ async function checkMicrophone(): Promise<void> {
 async function savePreferences(): Promise<void> {
   const autoDownloadVideo = (document.getElementById('auto-download-video') as HTMLInputElement)
     .checked;
-  const autoDownloadMarkdown = (
-    document.getElementById('auto-download-markdown') as HTMLInputElement
-  ).checked;
-  const autoDownloadJson = (document.getElementById('auto-download-json') as HTMLInputElement)
+  const autoGenerateSummary = (document.getElementById('auto-generate-summary') as HTMLInputElement)
     .checked;
   const showConsentReminder = (document.getElementById('show-consent') as HTMLInputElement).checked;
   const keepInternalVideoChunksAfterExport = (
@@ -219,8 +210,7 @@ async function savePreferences(): Promise<void> {
     const next = await saveSettings({
       captureMic: true,
       autoDownloadVideo,
-      autoDownloadMarkdown,
-      autoDownloadJson,
+      autoGenerateSummary,
       showConsentReminder,
       keepInternalVideoChunksAfterExport,
       language: language || undefined,

@@ -67,6 +67,7 @@ export type RecordingsPageMessage =
   | { type: 'GET_RECORDING'; payload: { recordingId: string } }
   | { type: 'DELETE_RECORDING'; payload: { recordingId: string } }
   | { type: 'RETRY_TRANSCRIPTION'; payload: { recordingId: string } }
+  | { type: 'RETRY_SUMMARY'; payload: { recordingId: string } }
   | { type: 'RETRY_VIDEO_DOWNLOAD'; payload: { recordingId: string } };
 
 export type OffscreenMessage =

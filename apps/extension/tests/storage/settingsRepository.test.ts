@@ -33,4 +33,26 @@ describe('settingsRepository', () => {
     expect(settings.language).toBe('en');
     expect(settings.captureMic).toBe(false);
   });
+
+  it('migrates old auto-download document settings off by default', async () => {
+    await chrome.storage.local.set({
+      'voxm:settings': {
+        modelProvider: 'groq',
+        modelName: 'whisper-large-v3-turbo',
+        autoDownloadVideo: true,
+        autoDownloadMarkdown: true,
+        autoDownloadJson: true,
+        autoDownloadSummaryMarkdown: true,
+        autoDownloadSummaryJson: true,
+      },
+    });
+
+    const settings = await loadSettings();
+
+    expect(settings.autoDownloadVideo).toBe(true);
+    expect(settings.autoDownloadMarkdown).toBe(false);
+    expect(settings.autoDownloadJson).toBe(false);
+    expect(settings.autoDownloadSummaryMarkdown).toBe(false);
+    expect(settings.autoDownloadSummaryJson).toBe(false);
+  });
 });

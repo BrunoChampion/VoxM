@@ -80,6 +80,37 @@ export function downloadTranscriptText(
   text: string,
   filename: string,
 ): Promise<{ downloadId: number }> {
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  return downloadMarkdownText(text, filename);
+}
+
+export function downloadMarkdownText(
+  text: string,
+  filename: string,
+): Promise<{ downloadId: number }> {
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
   return downloadBlobWithErrorCode(blob, filename, 'TRANSCRIPT_DOWNLOAD_FAILED');
+}
+
+export function downloadTranscriptJson(
+  text: string,
+  filename: string,
+): Promise<{ downloadId: number }> {
+  const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+  return downloadBlobWithErrorCode(blob, filename, 'TRANSCRIPT_DOWNLOAD_FAILED');
+}
+
+export function downloadSummaryMarkdown(
+  text: string,
+  filename: string,
+): Promise<{ downloadId: number }> {
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+  return downloadBlobWithErrorCode(blob, filename, 'SUMMARY_DOWNLOAD_FAILED');
+}
+
+export function downloadSummaryJson(
+  text: string,
+  filename: string,
+): Promise<{ downloadId: number }> {
+  const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+  return downloadBlobWithErrorCode(blob, filename, 'SUMMARY_DOWNLOAD_FAILED');
 }

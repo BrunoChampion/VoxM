@@ -25,6 +25,10 @@ type TranscriptEntry =
   | { kind: 'segment'; startMs: number; endMs: number; text: string }
   | { kind: 'failed'; startMs: number; text: string };
 
+type TranscriptionRawResponse = {
+  language?: unknown;
+};
+
 export function assertNoMissingAudioIndexes(chunks: AudioChunkEntity[]): void {
   for (let i = 0; i < chunks.length; i += 1) {
     if (chunks[i].index !== i) {
@@ -60,6 +64,19 @@ function removeOverlapDuplicates(segments: TranscriptSegment[]): TranscriptSegme
   }
 
   return deduped;
+}
+
+function inferTranscriptLanguage(chunks: AudioChunkEntity[]): string | undefined {
+  const counts = new Map<string, number>();
+
+  for (const chunk of chunks) {
+    const raw = chunk.groqRawResponse as TranscriptionRawResponse | undefined;
+    const language = typeof raw?.language === 'string' ? raw.language.trim() : '';
+    if (!language) continue;
+    counts.set(language, (counts.get(language) ?? 0) + 1);
+  }
+
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 }
 
 export function mergeTranscripts(
@@ -113,6 +130,7 @@ export function mergeTranscripts(
   const plainText = entries
     .map((entry) => `[${formatTimestamp(entry.startMs)}] ${entry.text}`)
     .join('\n');
+  const language = inferTranscriptLanguage(ordered);
 
   const markdown = `# Meeting Transcript
 
@@ -120,6 +138,7 @@ export function mergeTranscripts(
 - Duration: ${formatTimestamp(durationMs)}
 - Source: Browser tab recording
 - Model: Groq whisper-large-v3-turbo
+- Language: ${language ?? 'auto'}
 - Diarization: Not included in V1
 
 ## Transcript
@@ -133,6 +152,7 @@ ${plainText || '(No transcribed speech)'}
     durationMs,
     source: 'browser-tab',
     model: 'whisper-large-v3-turbo',
+    language,
     diarization: false,
     segments,
     failedChunks,

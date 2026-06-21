@@ -2,7 +2,7 @@
 
 Source-available browser meeting recorder and transcriber. Bring your own Groq API key.
 
-VoxM is a Chrome Manifest V3 extension that records browser-tab meetings, saves the video locally, and transcribes the meeting audio with Groq `whisper-large-v3-turbo`.
+VoxM is a Chrome Manifest V3 extension that records browser-tab meetings, saves the video locally, transcribes the meeting audio with Groq `whisper-large-v3-turbo`, and generates a structured meeting summary with Groq `llama-3.3-70b-versatile`.
 
 Everything is local-first: recordings, chunks, transcripts, settings, and metadata stay inside your browser profile unless VoxM sends audio chunks to Groq for transcription.
 
@@ -20,10 +20,13 @@ See [COMMERCIAL.md](./COMMERCIAL.md) for commercial-use guidance.
 - Record local microphone audio.
 - Mix tab audio and microphone audio into one `.webm` video.
 - Transcribe audio chunks sequentially with Groq.
-- Download transcript Markdown and JSON.
+- Generate meeting summaries with decisions, action items, open questions, risks, follow-up research, and next meeting topics.
+- Download transcript Markdown, transcription debug JSON, summary Markdown, and summary debug JSON.
 - Keep local recording history in IndexedDB.
 - Retry failed transcription chunks.
+- Retry summary generation.
 - Retry video export if internal video chunks are still stored.
+- Review recordings in a sidebar/detail page with video playback, summary, transcript, and debug data.
 - Recover active recording state across MV3 service worker restarts.
 
 ## Current Limitations
@@ -32,10 +35,10 @@ See [COMMERCIAL.md](./COMMERCIAL.md) for commercial-use guidance.
 - Groq is the only provider exposed in V1.
 - No live transcription.
 - No speaker diarization or speaker names.
-- No meeting summary or action items.
 - No cloud sync or team accounts.
 - Long videos can use significant memory during final export.
-- Windows Media Player may not support every WebM codec. If a valid `.webm` does not open there, try Chrome or VLC.
+- VoxM keeps a final local video blob for in-browser review. Long recordings can use significant browser storage.
+- Windows Media Player may not support every WebM codec. VoxM writes WebM duration metadata for better seeking, but if a valid `.webm` still does not open there, try Chrome or VLC.
 
 ## Requirements
 
@@ -108,15 +111,22 @@ VoxM records in an offscreen extension document, so the popup can be closed whil
 
 ## Where Files Go
 
-By default, Chrome downloads generated files to your Downloads folder:
+By default, Chrome downloads the generated video to your Downloads folder:
 
 ```text
 voxm-recording_YYYY-MM-DD_HH-mm-ss.webm
-voxm-transcript_YYYY-MM-DD_HH-mm-ss.md
-voxm-transcript_YYYY-MM-DD_HH-mm-ss.json
 ```
 
-Depending on Chrome's download behavior and MIME handling, transcript files may appear with `.txt` in some environments even though one contains Markdown and the other contains JSON.
+Transcripts, summaries, and debug JSON stay available in **Recordings** and download only when you click their export buttons:
+
+```text
+voxm-transcript_YYYY-MM-DD_HH-mm-ss.md
+voxm-transcription-debug_YYYY-MM-DD_HH-mm-ss.json
+voxm-summary_YYYY-MM-DD_HH-mm-ss.md
+voxm-summary-debug_YYYY-MM-DD_HH-mm-ss.json
+```
+
+Markdown downloads use `text/markdown`; debug downloads use `application/json`.
 
 ## Recordings Page
 
@@ -124,11 +134,17 @@ Open the VoxM popup and click **Open Recordings**.
 
 From there you can:
 
+- Play the exported WebM video in the browser.
+- View the meeting summary.
 - View transcript.
+- Copy summary.
 - Copy transcript.
-- Download Markdown.
-- Download JSON.
+- Download transcript Markdown.
+- Download transcription debug JSON.
+- Download summary Markdown.
+- Download summary debug JSON.
 - Retry transcription.
+- Retry summary generation.
 - Retry video export.
 - Delete local data.
 
@@ -140,8 +156,7 @@ For development and QA:
 
 - Enable **Keep internal video chunks after export**.
 - Keep **Auto-download video** enabled.
-- Keep **Auto-download transcript Markdown** enabled.
-- Keep **Auto-download transcript JSON** enabled.
+- Keep **Generate meeting summary after transcription** enabled.
 - Use headphones to reduce echo.
 - Test with recordings longer than 4 minutes to verify multi-chunk transcription.
 
@@ -156,6 +171,25 @@ The transcript merger:
 - Preserves failed chunks with explicit gap markers.
 - Removes exact duplicate lines near overlap boundaries.
 - Produces Markdown and JSON.
+
+## How Summary Works
+
+After transcription finishes, VoxM sends the merged transcript to Groq `llama-3.3-70b-versatile` through Groq's OpenAI-compatible chat completions API.
+
+The model is asked for JSON, and VoxM renders the human-readable Markdown locally. Summary output includes:
+
+- executive summary;
+- discussed topics;
+- decisions;
+- action items;
+- open questions;
+- risks and blockers;
+- follow-up research;
+- next meeting topics;
+- timeline highlights;
+- confidence notes.
+
+If summary generation fails, the transcript remains available and the Recordings page shows **Generate Summary** / **Regenerate Summary**.
 
 ## Groq Free Plan Compatibility
 
@@ -209,11 +243,16 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) before opening larger changes.
 - Record at least 4 minutes.
 - Stop recording.
 - Confirm a `.webm` downloads.
-- Confirm Markdown and JSON transcripts download.
 - Open **Recordings**.
+- Confirm the selected recording plays in the browser.
+- Confirm the summary is visible.
 - Confirm transcript crosses `00:03:00`.
 - Confirm `failedChunks` is empty in JSON.
+- Download transcript Markdown manually.
+- Download summary Markdown manually.
+- Download debug JSON manually from the Debug tab.
 - Try **Retry Transcription**.
+- Try **Regenerate Summary**.
 - Try **Retry Video Export** with **Keep internal video chunks after export** enabled.
 
 ## Troubleshooting

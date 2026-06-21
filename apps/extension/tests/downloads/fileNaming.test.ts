@@ -3,6 +3,9 @@ import {
   getVideoFilename,
   getMarkdownFilename,
   getJsonFilename,
+  getSummaryDebugFilename,
+  getSummaryMarkdownFilename,
+  getTranscriptionDebugFilename,
   formatTimestampForFilename,
 } from '../../src/core/downloads/fileNaming';
 
@@ -19,7 +22,20 @@ describe('fileNaming', () => {
 
   it('generates json transcript filename', () => {
     const date = new Date(2026, 5, 19, 14, 30, 45);
-    expect(getJsonFilename(date)).toMatch(/^voxm-transcript_2026-06-19_14-30-45\.json$/);
+    expect(getJsonFilename(date)).toMatch(
+      /^voxm-transcription-debug_2026-06-19_14-30-45\.json$/,
+    );
+    expect(getTranscriptionDebugFilename(date)).toMatch(
+      /^voxm-transcription-debug_2026-06-19_14-30-45\.json$/,
+    );
+  });
+
+  it('generates summary filenames', () => {
+    const date = new Date(2026, 5, 19, 14, 30, 45);
+    expect(getSummaryMarkdownFilename(date)).toMatch(/^voxm-summary_2026-06-19_14-30-45\.md$/);
+    expect(getSummaryDebugFilename(date)).toMatch(
+      /^voxm-summary-debug_2026-06-19_14-30-45\.json$/,
+    );
   });
 
   it('removes unsafe characters from filenames', () => {

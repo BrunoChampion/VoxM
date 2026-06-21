@@ -8,6 +8,7 @@ function makeChunk(
   offsetMs: number,
   status: AudioChunkEntity['transcriptionStatus'],
   segments: GroqTranscriptionSegment[] = [],
+  language?: string,
 ): AudioChunkEntity {
   return {
     id: `chunk-${index}`,
@@ -21,6 +22,7 @@ function makeChunk(
     transcriptionStatus: status,
     transcriptionAttempts: status === 'completed' ? 1 : 0,
     transcriptSegments: segments,
+    groqRawResponse: language ? { language } : undefined,
     errorCode: status === 'failed' ? 'GROQ_TRANSCRIPTION_FAILED' : undefined,
     errorMessage: status === 'failed' ? 'Failed' : undefined,
   };
@@ -180,5 +182,30 @@ describe('transcriptMerger', () => {
     const merged = mergeTranscripts('rec-1', '2026-06-19T10:00:00.000Z', 0, chunks);
     expect(merged.json.segments).toEqual([]);
     expect(merged.markdown).toContain('(No transcribed speech)');
+  });
+
+  it('persists the dominant transcription language', () => {
+    const segment: GroqTranscriptionSegment = {
+      id: 0,
+      seek: 0,
+      start: 0,
+      end: 1,
+      text: 'Hola',
+      tokens: [],
+      temperature: 0,
+      avg_logprob: 0,
+      compression_ratio: 1,
+      no_speech_prob: 0,
+    };
+    const chunks = [
+      makeChunk(0, 0, 'completed', [segment], 'es'),
+      makeChunk(1, 180_000, 'completed', [{ ...segment, text: 'seguimos' }], 'es'),
+      makeChunk(2, 360_000, 'completed', [{ ...segment, text: 'hello' }], 'en'),
+    ];
+
+    const merged = mergeTranscripts('rec-1', '2026-06-19T10:00:00.000Z', 370_000, chunks);
+
+    expect(merged.json.language).toBe('es');
+    expect(merged.markdown).toContain('- Language: es');
   });
 });

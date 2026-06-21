@@ -27,12 +27,23 @@ import type {
 } from '../core/messaging/messageTypes';
 import type { RecordingState } from '../core/recording/recordingTypes';
 import { TranscriptionOrchestrator } from '../core/transcription/TranscriptionOrchestrator';
-import { downloadTranscriptText, downloadVideoBlob } from '../core/downloads/downloadBlob';
+import {
+  downloadMarkdownText,
+  downloadSummaryJson,
+  downloadSummaryMarkdown,
+  downloadTranscriptJson,
+  downloadVideoBlob,
+} from '../core/downloads/downloadBlob';
 import {
   getVideoFilename,
   getMarkdownFilename,
   getJsonFilename,
+  getSummaryDebugFilename,
+  getSummaryMarkdownFilename,
 } from '../core/downloads/fileNaming';
+import { generateMeetingSummary } from '../core/summary/GroqSummaryClient';
+import { renderSummaryMarkdown } from '../core/summary/summaryMarkdown';
+import { repairWebmDurationMetadata } from '../core/video/repairWebmDuration';
 
 const OFFSCREEN_DOCUMENT_PATH = 'offscreen.html';
 
@@ -41,6 +52,14 @@ let lastStatus: RecordingStatusPayload | null = null;
 let transcriptionOrchestrator: TranscriptionOrchestrator | null = null;
 let offscreenReady = false;
 let offscreenReadyResolve: (() => void) | null = null;
+
+type RecordingListItem = Omit<
+  RecordingEntity,
+  'videoBlob' | 'transcriptMarkdown' | 'transcriptJson' | 'summaryMarkdown' | 'summaryJson'
+> & {
+  hasTranscript: boolean;
+  hasSummary: boolean;
+};
 
 function assertNoMissingVideoIndexes(chunks: VideoChunkEntity[]): void {
   for (let i = 0; i < chunks.length; i += 1) {
@@ -304,16 +323,18 @@ export async function finalizeRecording(recordingId: string): Promise<void> {
       chunks.map((chunk) => chunk.blob),
       { type: mimeType },
     );
+    const playableBlob = await repairWebmDurationMetadata(finalBlob, durationMs);
     const filename = getVideoFilename(new Date(recording.startedAt));
     const downloadResult = settings.autoDownloadVideo
-      ? await downloadVideoBlob(finalBlob, filename)
+      ? await downloadVideoBlob(playableBlob, filename)
       : undefined;
 
     await updateRecording(recordingId, {
       videoDownloadId: downloadResult?.downloadId,
       videoFilename: settings.autoDownloadVideo ? filename : undefined,
       videoMimeType: mimeType,
-      videoSizeBytes: finalBlob.size,
+      videoSizeBytes: playableBlob.size,
+      videoBlob: playableBlob,
       status: 'transcribing',
       videoChunkCount: chunks.length,
     });
@@ -394,13 +415,13 @@ async function runTranscription(
 
     if (settings.autoDownloadMarkdown) {
       const mdFilename = getMarkdownFilename(new Date(recording.startedAt));
-      const result = await downloadTranscriptText(merged.markdown, mdFilename);
+      const result = await downloadMarkdownText(merged.markdown, mdFilename);
       mdDownloadId = result.downloadId;
     }
 
     if (settings.autoDownloadJson) {
       const jsonFilename = getJsonFilename(new Date(recording.startedAt));
-      const result = await downloadTranscriptText(JSON.stringify(merged.json, null, 2), jsonFilename);
+      const result = await downloadTranscriptJson(JSON.stringify(merged.json, null, 2), jsonFilename);
       jsonDownloadId = result.downloadId;
     }
 
@@ -408,6 +429,10 @@ async function runTranscription(
       transcriptMarkdownDownloadId: mdDownloadId,
       transcriptJsonDownloadId: jsonDownloadId,
     });
+
+    if (settings.autoGenerateSummary && merged.json.segments.length > 0) {
+      await runSummary(recordingId, settings);
+    }
 
     updateBadge('idle');
     await clearRuntimeRecordingState();
@@ -452,14 +477,101 @@ async function retryVideoDownload(recordingId: string): Promise<void> {
     chunks.map((chunk) => chunk.blob),
     { type: mimeType },
   );
+  const playableBlob = await repairWebmDurationMetadata(finalBlob, recording.durationMs ?? 0);
   const filename = getVideoFilename(new Date(recording.startedAt));
-  const { downloadId } = await downloadVideoBlob(finalBlob, filename);
+  const { downloadId } = await downloadVideoBlob(playableBlob, filename);
 
   await updateRecording(recordingId, {
     videoDownloadId: downloadId,
     videoFilename: filename,
-    videoSizeBytes: finalBlob.size,
+    videoSizeBytes: playableBlob.size,
+    videoBlob: playableBlob,
   });
+}
+
+async function runSummary(
+  recordingId: string,
+  settings: Awaited<ReturnType<typeof loadSettings>>,
+): Promise<void> {
+  const recording = await getRecording(recordingId);
+  if (!recording?.transcriptMarkdown || !recording.transcriptJson) {
+    await updateRecording(recordingId, {
+      summaryErrorCode: 'GROQ_SUMMARY_FAILED',
+      summaryErrorMessage: 'Transcript is not available for summary generation.',
+    });
+    return;
+  }
+
+  if (!settings.groqApiKey) {
+    await updateRecording(recordingId, {
+      summaryErrorCode: 'NO_API_KEY',
+      summaryErrorMessage: 'Groq API key is missing. Add it in settings and retry summary.',
+    });
+    return;
+  }
+
+  try {
+    void chrome.action.setBadgeText({ text: 'SUM' });
+    const summaryJson = await generateMeetingSummary(
+      {
+        recordingId,
+        transcriptMarkdown: recording.transcriptMarkdown,
+        transcriptJson: recording.transcriptJson,
+      },
+      { apiKey: settings.groqApiKey },
+    );
+    const summaryMarkdown = renderSummaryMarkdown(summaryJson);
+
+    let summaryMarkdownDownloadId: number | undefined;
+    let summaryJsonDownloadId: number | undefined;
+
+    if (settings.autoDownloadSummaryMarkdown) {
+      const filename = getSummaryMarkdownFilename(new Date(recording.startedAt));
+      const result = await downloadSummaryMarkdown(summaryMarkdown, filename);
+      summaryMarkdownDownloadId = result.downloadId;
+    }
+
+    if (settings.autoDownloadSummaryJson) {
+      const filename = getSummaryDebugFilename(new Date(recording.startedAt));
+      const result = await downloadSummaryJson(JSON.stringify(summaryJson, null, 2), filename);
+      summaryJsonDownloadId = result.downloadId;
+    }
+
+    await updateRecording(recordingId, {
+      summaryMarkdown,
+      summaryJson,
+      summaryMarkdownDownloadId,
+      summaryJsonDownloadId,
+      summaryModelProvider: 'groq',
+      summaryModelName: 'llama-3.3-70b-versatile',
+      summaryGeneratedAt: summaryJson.generatedAt,
+      summaryErrorCode: undefined,
+      summaryErrorMessage: undefined,
+    });
+  } catch (error) {
+    const appError =
+      error instanceof AppError
+        ? error
+        : new AppError(
+            'GROQ_SUMMARY_FAILED',
+            error instanceof Error ? error.message : 'Unknown summary error',
+            error,
+          );
+
+    await updateRecording(recordingId, {
+      summaryErrorCode: appError.code,
+      summaryErrorMessage: appError.message,
+    });
+  }
+}
+
+async function retrySummary(recordingId: string): Promise<void> {
+  const settings = await loadSettings();
+  try {
+    await runSummary(recordingId, settings);
+  } finally {
+    updateBadge('idle');
+  }
 }
 
 async function retryTranscription(recordingId: string): Promise<void> {
@@ -624,7 +736,10 @@ async function handleMessage(message: AnyMessage): Promise<unknown> {
       return { success: true };
 
     case 'GET_RECORDINGS':
-      return listRecordings();
+      {
+        const recordings = await listRecordings();
+        return recordings.map(stripVideoBlob);
+      }
 
     case 'GET_RECORDING':
       return getRecording(message.payload.recordingId);
@@ -639,6 +754,10 @@ async function handleMessage(message: AnyMessage): Promise<unknown> {
 
     case 'RETRY_TRANSCRIPTION':
       await retryTranscription(message.payload.recordingId);
+      return { success: true };
+
+    case 'RETRY_SUMMARY':
+      await retrySummary(message.payload.recordingId);
       return { success: true };
 
     case 'RETRY_VIDEO_DOWNLOAD':
@@ -701,6 +820,18 @@ chrome.runtime.onMessage.addListener((message: AnyMessage, _sender, sendResponse
     });
   return true;
 });
+
+function stripVideoBlob(recording: RecordingEntity): RecordingListItem {
+  const hasTranscript = Boolean(recording.transcriptMarkdown);
+  const hasSummary = Boolean(recording.summaryMarkdown);
+  const copy = { ...recording };
+  delete copy.videoBlob;
+  delete copy.transcriptMarkdown;
+  delete copy.transcriptJson;
+  delete copy.summaryMarkdown;
+  delete copy.summaryJson;
+  return { ...copy, hasTranscript, hasSummary };
+}
 
 chrome.runtime.onStartup.addListener(() => {
   updateBadge('idle');

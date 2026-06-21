@@ -19,5 +19,21 @@ export function getMarkdownFilename(date = new Date()): string {
 }
 
 export function getJsonFilename(date = new Date()): string {
-  return sanitizeFilename(`voxm-transcript_${formatTimestampForFilename(date)}.json`);
+  return getTranscriptionDebugFilename(date);
+}
+
+export function getTranscriptMarkdownFilename(date = new Date()): string {
+  return getMarkdownFilename(date);
+}
+
+export function getTranscriptionDebugFilename(date = new Date()): string {
+  return sanitizeFilename(`voxm-transcription-debug_${formatTimestampForFilename(date)}.json`);
+}
+
+export function getSummaryMarkdownFilename(date = new Date()): string {
+  return sanitizeFilename(`voxm-summary_${formatTimestampForFilename(date)}.md`);
+}
+
+export function getSummaryDebugFilename(date = new Date()): string {
+  return sanitizeFilename(`voxm-summary-debug_${formatTimestampForFilename(date)}.json`);
 }

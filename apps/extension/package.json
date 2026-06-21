@@ -19,6 +19,7 @@
     "@types/wicg-file-system-access": "^2023.10.5",
     "fake-indexeddb": "^5.0.2",
     "happy-dom": "^14.0.0",
+    "sharp": "^0.35.2",
     "typescript": "latest",
     "vite": "^5.0.0",
     "vitest": "^1.0.0"

@@ -234,17 +234,6 @@ button:focus-visible,
   padding-left: var(--space-5);
 }
 
-.recording-nav::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  left: 6px;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--review-border-strong);
-}
-
 .recording-nav-item {
   position: relative;
   display: grid;
@@ -259,17 +248,33 @@ button:focus-visible,
   text-align: left;
 }
 
+/* Connector segment: runs from this card's node to the next card's node.
+   Drawn per-item so the spine always matches the cards and never dangles. */
+.recording-nav-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -16px;
+  width: 2px;
+  height: calc(100% + var(--space-1));
+  border-radius: 2px;
+  background: var(--review-border-strong);
+}
+
+/* Node: centered vertically on the card, sitting on the spine. */
 .recording-nav-item::before {
   content: "";
   position: absolute;
-  top: 20px;
-  left: -19px;
-  width: 9px;
-  height: 9px;
+  top: 50%;
+  left: -20px;
+  width: 10px;
+  height: 10px;
+  transform: translateY(-50%);
   border-radius: 50%;
   background: var(--review-bg);
   box-shadow: 0 0 0 2px var(--review-border-strong);
   transition: background-color 160ms ease, box-shadow 160ms ease;
+  z-index: 1;
 }
 
 .recording-nav-item:hover {

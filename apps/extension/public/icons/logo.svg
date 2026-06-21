@@ -1,0 +1,17 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VoxM">
+  <!-- Teal monolith tile; everything outside the rounded rect stays transparent -->
+  <rect x="0" y="0" width="128" height="128" rx="28" fill="#315d5b"/>
+  <!-- Waveform bars forming a V-envelope (tall edges, short center). cy = 64. -->
+  <g fill="#f4f1ea">
+    <rect x="25.5" y="36" width="5" height="56" rx="2.5"/>
+    <rect x="34.5" y="41" width="5" height="46" rx="2.5"/>
+    <rect x="43.5" y="46" width="5" height="36" rx="2.5"/>
+    <rect x="52.5" y="50.5" width="5" height="27" rx="2.5"/>
+    <rect x="61.5" y="54" width="5" height="20" rx="2.5"/>
+    <!-- live-capture bar, just right of center, in warm accent -->
+    <rect x="70.5" y="50.5" width="5" height="27" rx="2.5" fill="#e08a3c"/>
+    <rect x="79.5" y="46" width="5" height="36" rx="2.5"/>
+    <rect x="88.5" y="41" width="5" height="46" rx="2.5"/>
+    <rect x="97.5" y="36" width="5" height="56" rx="2.5"/>
+  </g>
+</svg>

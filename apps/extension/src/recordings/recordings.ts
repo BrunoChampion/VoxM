@@ -62,7 +62,7 @@ function renderShell(): void {
     revokeVideoUrl();
     content.innerHTML = `
       <section class="empty-state">
-        <div class="empty-mark">VX</div>
+        <div class="empty-mark">${waveMark('wave-empty')}</div>
         <h2>No recordings yet</h2>
         <p>Start from the VoxM popup while your meeting tab is active. Finished meetings will appear here with video, transcript, summary, retries, and downloads.</p>
         <button class="btn-primary" id="open-popup">Open VoxM</button>
@@ -78,9 +78,12 @@ function renderShell(): void {
     <div class="recordings-shell">
       <aside class="recording-sidebar" aria-label="Recordings">
         <div class="sidebar-head">
-          <div>
-            <p class="eyebrow">Local archive</p>
-            <h2>Recordings</h2>
+          <div class="sidebar-brand">
+            ${waveMark('wave-brand')}
+            <div>
+              <p class="eyebrow">Local archive</p>
+              <h2>Recordings</h2>
+            </div>
           </div>
           <span class="count-pill">${recordings.length}</span>
         </div>
@@ -168,14 +171,17 @@ function renderRecordingDetail(recording: RecordingEntity): string {
     </header>
 
     <section class="video-panel">
-      ${
-        videoUrl
-          ? `<video class="recording-video" controls preload="metadata" src="${videoUrl}"></video>`
-          : `<div class="video-empty">
-              <strong>Video preview is not available.</strong>
-              <span>Retry export if internal chunks still exist, or keep internal chunks enabled for future tests.</span>
-            </div>`
-      }
+      <div class="video-frame">
+        <span class="video-label">${waveMark('wave-label')}<span>Preview</span></span>
+        ${
+          videoUrl
+            ? `<video class="recording-video" controls preload="metadata" src="${videoUrl}"></video>`
+            : `<div class="video-empty">
+                <strong>Video preview is not available.</strong>
+                <span>Retry export if internal chunks still exist, or keep internal chunks enabled for future tests.</span>
+              </div>`
+        }
+      </div>
     </section>
 
     ${renderWarnings(recording)}
@@ -656,6 +662,13 @@ function revokeVideoUrl(): void {
 
 function recordingDate(recording: RecordingEntity | null): Date {
   return recording ? new Date(recording.startedAt) : new Date();
+}
+
+function waveMark(variant = ''): string {
+  const bars = [9, 17, 6, 22, 12, 26, 8, 15, 5];
+  return `<span class="wave-mark ${variant}" aria-hidden="true">${bars
+    .map((height) => `<i style="--bar-h:${height}"></i>`)
+    .join('')}</span>`;
 }
 
 function escapeHtml(text: string): string {
